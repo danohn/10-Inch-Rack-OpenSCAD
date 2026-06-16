@@ -3,6 +3,10 @@
 Do you have a 10 inch mini rack, but don't want to design the shelves yourself? 
 Easily generate your own 10 inch rack shelves, no CAD required. 
 
+This is a fork of Spencer Owen's original
+[10-Inch-Rack-OpenSCAD](https://github.com/spuder/10-Inch-Rack-OpenSCAD)
+project. This fork preserves the original MIT license and attribution while
+adding multi-device side-by-side mounting support and related presets.
 
 ### Customization
 
@@ -14,13 +18,17 @@ A 0.42 mm tolerance is built in, which works well for most models.
 
 #### Available Parameters
 
-Set `switch_width`, `switch_depth`, and `switch_height` to the width, depth, and height of the device you want to mount.
+Set `component_width`, `component_depth`, and `component_height` to the width,
+depth, and height of the device you want to mount. To mount multiple identical
+devices side by side, set `component_count` and `component_gap`.
 
 - **rack_width** (254.0) — 254 = 10 inch rack, 152.4 = 6 inch rack
 - **rack_height** (1.0) — Height in U units (0.5–5U, each U = 44.45 mm)
-- **switch_width** (135.0) — Width of the device, left to right (mm)
-- **switch_depth** (135.0) — Depth of the device, front to back (mm)
-- **switch_height** (28.3) — Height of the device (mm)
+- **component_width** (110.0) — Width of one device, left to right (mm)
+- **component_depth** (122.0) — Depth of the device, front to back (mm)
+- **component_height** (28.3) — Height of the device (mm)
+- **component_count** (1) — Number of identical devices to mount side by side
+- **component_gap** (6) — Gap between side-by-side devices; this becomes the center divider width
 - **front_wire_holes** (false) — Adds small holes to route a USB or power cable through the front
 - **wire_diameter** (7) — Diameter of front wire holes (mm)
 - **air_holes** (true) — Hexagon cutouts on sides and back to reduce material and improve cooling
@@ -55,6 +63,7 @@ Set `switch_width`, `switch_depth`, and `switch_height` to the width, depth, and
 - IBM M90q Gen 5: `179 x 182.9 x 36.5 mm`*
 - Dell OptiPlex 7020: `182 x 178 x 36 mm`*
 - HP Elite Mini 800: `177.5 x 175.2 x 34.3 mm`*
+- GMKtec NucBox G2: `87.1 x 87.5 x 40.3 mm`* (`component_count=2`, `component_gap=6` for a pair)
 - M4 Mac Mini: `127 x 127 x 50 mm`*
 - BeeLink ME Mini: `99 x 99 x 99 mm`*
 - Xyber Hydra: `140 x 98.5 x 34.5 mm`*
@@ -73,4 +82,5 @@ Set `switch_width`, `switch_depth`, and `switch_height` to the width, depth, and
 - [Alternative 10 inch rack generator with cage](https://github.com/WebMaka/ParametricRackCageGenerator)
 - [OpenRack - A 19Inch modular system](https://makerworld.com/en/models/1032069-openrack-1u-a-modular-server-rack-system)
 
-Source Code is [available on github](https://github.com/spuder/10-Inch-Rack-OpenSCAD)
+Source code for this fork is
+[available on GitHub](https://github.com/danohn/10-Inch-Rack-OpenSCAD).

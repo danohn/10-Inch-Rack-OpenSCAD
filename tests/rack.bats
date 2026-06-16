@@ -11,6 +11,7 @@ setup_file() {
     local params=(
         rack_width rack_height
         component_width component_depth component_height
+        component_count component_gap
         front_wire_holes wire_diameter air_holes
         half_height_holes case_thickness front_plate_thickness
         front_plate_hole front_lip tolerance
@@ -203,6 +204,15 @@ setup_file() {
     render_views "xyber_hydra" \
         -D 'component_width=140' -D 'component_depth=98.5' -D 'component_height=34.5' -D 'front_plate_hole=true'
     assert_views_exist "xyber_hydra"
+}
+
+@test "GMKtec NucBox G2 pair (2x 87.1x87.5x40.3)" {
+    render_views "gmktec_nucbox_g2_pair" \
+        -D 'component_count=2' -D 'component_gap=6' \
+        -D 'component_width=87.1' -D 'component_depth=87.5' -D 'component_height=40.3' \
+        -D 'rack_height=1' -D 'front_plate_hole=true' -D 'front_lip=true' \
+        -D 'front_wire_holes=false' -D 'keystones=false'
+    assert_views_exist "gmktec_nucbox_g2_pair"
 }
 
 # ── Storage devices ───────────────────────────────────────────────────────────

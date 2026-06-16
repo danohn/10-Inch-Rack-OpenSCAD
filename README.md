@@ -2,6 +2,11 @@
 
 OpenSCAD file to generate a 10 inch rack for 3d printing
 
+This fork is based on Spencer Owen's
+[10-Inch-Rack-OpenSCAD](https://github.com/spuder/10-Inch-Rack-OpenSCAD)
+project. It preserves the original MIT license and attribution while adding
+multi-device side-by-side mounting support and related presets.
+
 [https://makerworld.com/models/1765102](https://makerworld.com/en/models/1765102-10-inch-mini-rack-generator)
 
 ![10 Inch Mini-Rack v4](https://github.com/user-attachments/assets/5946932a-b365-4e06-b929-32ac15681922)
@@ -19,6 +24,10 @@ To build a preset from the command line:
 ```bash
 openscad -p 10InchRackGenerator.json -P "Xyber Hydra" -o out.stl 10InchRackGenerator.scad
 ```
+
+For side-by-side devices, set `component_count` and `component_gap`. For
+example, the `GMKtec NucBox G2 Pair` preset mounts two 87.1 × 87.5 × 40.3 mm
+units in separate front openings with a 6 mm center divider.
 
 Every saved preset is also covered by the test suite (see the
 `customizer presets render` case below), so presets added via the Customizer get

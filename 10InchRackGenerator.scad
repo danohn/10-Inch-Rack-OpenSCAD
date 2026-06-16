@@ -6,6 +6,10 @@ rack_height = 1.0; // [0.5:0.5:5]
 component_width = 110.0;
 component_depth = 122.0;
 component_height = 28.30;
+// Number of identical components to mount side by side.
+component_count = 1; // [1:1:4]
+// Gap between side-by-side components. This becomes the center divider width.
+component_gap = 6;
 
 // ========================================
 /* [Keystones] */
@@ -45,10 +49,10 @@ height = 44.45 * rack_height;
 module switch_mount(switch_width, switch_height, switch_depth) {
     //6 inch racks (mounts=152.4mm; rails=15.875mm; usable space=120.65mm)
     //10 inch racks (mounts=254.0mm; rails=15.875mm; usable space=221.5mm)
-    chassis_width = min(switch_width + (2 * case_thickness), (rack_width == 152.4) ? 120.65 : 221.5);
+    total_switch_width = component_count * switch_width + (component_count - 1) * component_gap;
+    chassis_width = min(total_switch_width + (2 * case_thickness), (rack_width == 152.4) ? 120.65 : 221.5);
     corner_radius = 4.0;
     chassis_edge_radius = 2.0;
-    tolerance = 0.42;
 
     zip_tie_hole_count = 8;
     zip_tie_hole_width = 1.5;
@@ -70,7 +74,7 @@ module switch_mount(switch_width, switch_height, switch_depth) {
     // Calculated dimensions
     cutout_w = switch_width + (2 * tolerance);
     cutout_h = switch_height + (2 * tolerance);
-    cutout_x = (rack_width - cutout_w) / 2;
+    cutout_x = (rack_width - total_switch_width) / 2 - tolerance;
     cutout_y = (height - cutout_h) / 2;
 
     // Keystone placement — jack X span (width) goes horizontal, jack Z span (height) goes vertical
@@ -105,6 +109,8 @@ module switch_mount(switch_width, switch_height, switch_depth) {
             translate([width - radius, height - radius, 0]) cylinder(h = depth, r = radius);
         }
     }
+
+    function bay_left(bay_index) = (rack_width - total_switch_width) / 2 + bay_index * (switch_width + component_gap);
     
     // Create the main body as a separate module
     module main_body() {
@@ -124,35 +130,37 @@ module switch_mount(switch_width, switch_height, switch_depth) {
     
     // Create switch cutout with optional lip
     module switch_cutout() {
-        if (front_plate_hole && front_lip) {
-            lip_thickness = 1.2;
-            lip_depth = 0.60;
-            // Main cutout minus lip (centered)
-            translate([
-                (rack_width - (cutout_w - 2*lip_thickness)) / 2,
-                (height - (cutout_h - 2*lip_thickness)) / 2,
-                -tolerance
-            ]) {
-                cube([cutout_w - 2*lip_thickness, cutout_h - 2*lip_thickness, chassis_depth_main]);
-            }
-            // Switch cutout above the lip (centered)
-            translate([
-                (rack_width - cutout_w) / 2,
-                (height - cutout_h) / 2,
-                lip_depth
-            ]) {
-                cube([cutout_w, cutout_h, chassis_depth_main]);
-            }
-        } else {
-            // Full cutout: starts at front face when front_plate_hole, or behind front panel when solid
-            z_start = front_plate_hole ? -tolerance : front_plate_thickness;
-            z_depth = front_plate_hole ? chassis_depth_main + 2*tolerance : chassis_depth_main - front_plate_thickness + tolerance;
-            translate([
-                (rack_width - cutout_w) / 2,
-                (height - cutout_h) / 2,
-                z_start
-            ]) {
-                cube([cutout_w, cutout_h, z_depth]);
+        for (bay = [0:component_count-1]) {
+            if (front_plate_hole && front_lip) {
+                lip_thickness = 1.2;
+                lip_depth = 0.60;
+                // Main cutout minus lip.
+                translate([
+                    bay_left(bay) - tolerance + lip_thickness,
+                    (height - (cutout_h - 2*lip_thickness)) / 2,
+                    -tolerance
+                ]) {
+                    cube([cutout_w - 2*lip_thickness, cutout_h - 2*lip_thickness, chassis_depth_main]);
+                }
+                // Full component cutout behind the lip.
+                translate([
+                    bay_left(bay) - tolerance,
+                    (height - cutout_h) / 2,
+                    lip_depth
+                ]) {
+                    cube([cutout_w, cutout_h, chassis_depth_main]);
+                }
+            } else {
+                // Full cutout: starts at front face when front_plate_hole, or behind front panel when solid
+                z_start = front_plate_hole ? -tolerance : front_plate_thickness;
+                z_depth = front_plate_hole ? chassis_depth_main + 2*tolerance : chassis_depth_main - front_plate_thickness + tolerance;
+                translate([
+                    bay_left(bay) - tolerance,
+                    (height - cutout_h) / 2,
+                    z_start
+                ]) {
+                    cube([cutout_w, cutout_h, z_depth]);
+                }
             }
         }
     }
@@ -204,15 +212,16 @@ module switch_mount(switch_width, switch_height, switch_depth) {
 
     // Power wire cutouts: configurable diameter holes at top and bottom rack hole positions
     module power_wire_cutouts() {
-        hole_spacing_x = switch_width; // match rack holes
-        hole_left_x = (rack_width - hole_spacing_x) / 2 - (wire_diameter /5);
-        hole_right_x = (rack_width + hole_spacing_x) / 2 + (wire_diameter /5);
         // Midplane of switch opening
         mid_y = (height - switch_height) / 2 + switch_height / 2;
-        for (side_x = [hole_left_x, hole_right_x]) {
-            translate([side_x, mid_y, 0]) {
-                linear_extrude(height = chassis_depth_main) {
-                    circle(d=wire_diameter);
+        for (bay = [0:component_count-1]) {
+            hole_left_x = bay_left(bay) - (wire_diameter / 5);
+            hole_right_x = bay_left(bay) + switch_width + (wire_diameter / 5);
+            for (side_x = [hole_left_x, hole_right_x]) {
+                translate([side_x, mid_y, 0]) {
+                    linear_extrude(height = chassis_depth_main) {
+                        circle(d=wire_diameter);
+                    }
                 }
             }
         }
@@ -220,25 +229,27 @@ module switch_mount(switch_width, switch_height, switch_depth) {
     
     // Create zip tie holes and indents
     module zip_tie_features() {
-        // Zip tie holes
         zip_z = switch_depth + solid_z_offset;
-        for (i = [0:zip_tie_hole_count-1]) {
-            x_pos = (rack_width - switch_width)/2 + (switch_width/(zip_tie_hole_count+1)) * (i+1);
-            translate([x_pos, 0, zip_z]) {
-                cube([zip_tie_hole_width, height, zip_tie_hole_length]);
+        for (bay = [0:component_count-1]) {
+            // Zip tie holes
+            for (i = [0:zip_tie_hole_count-1]) {
+                x_pos = bay_left(bay) + (switch_width/(zip_tie_hole_count+1)) * (i+1);
+                translate([x_pos, 0, zip_z]) {
+                    cube([zip_tie_hole_width, height, zip_tie_hole_length]);
+                }
             }
-        }
 
-        // Zip tie indents (top and bottom)
-        x_pos = (rack_width - switch_width)/2;
-        chassis_height = min(switch_height + (2 * case_thickness), height);
-        // Bottom indent
-        translate([x_pos, (height - chassis_height)/2, zip_z]) {
-            cube([switch_width, zip_tie_indent_depth, zip_tie_cutout_depth]);
-        }
-        // Top indent
-        translate([x_pos, (height + chassis_height)/2 - zip_tie_indent_depth, zip_z]) {
-            cube([switch_width, zip_tie_indent_depth, zip_tie_cutout_depth]);
+            // Zip tie indents (top and bottom)
+            x_pos = bay_left(bay);
+            chassis_height = min(switch_height + (2 * case_thickness), height);
+            // Bottom indent
+            translate([x_pos, (height - chassis_height)/2, zip_z]) {
+                cube([switch_width, zip_tie_indent_depth, zip_tie_cutout_depth]);
+            }
+            // Top indent
+            translate([x_pos, (height + chassis_height)/2 - zip_tie_indent_depth, zip_z]) {
+                cube([switch_width, zip_tie_indent_depth, zip_tie_cutout_depth]);
+            }
         }
     }
 
@@ -251,12 +262,12 @@ module switch_mount(switch_width, switch_height, switch_depth) {
 
         // Chassis dimensions used by both hole sections
         chassis_height = min(switch_height + (2 * case_thickness), height);
-        chassis_width = min(switch_width + (2 * case_thickness), (rack_width == 152.4) ? 120.65 : 221.5);
+        chassis_width = min(total_switch_width + (2 * case_thickness), (rack_width == 152.4) ? 120.65 : 221.5);
         side_margin = (rack_width - chassis_width) / 2;
 
         // TOP/BOTTOM FACE HOLES (Y-axis, penetrating top and bottom chassis walls)
         // Calculate available space for holes within switch dimensions
-        available_width = switch_width - (2 * margin);
+        available_width = total_switch_width - (2 * margin);
         available_depth = switch_depth - (2 * margin);
 
         // Calculate number of holes that fit

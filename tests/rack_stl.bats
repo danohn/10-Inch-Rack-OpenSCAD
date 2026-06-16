@@ -57,6 +57,15 @@ setup_file() {
     [ -s "$RENDERS/thick_walls.stl" ]
 }
 
+@test "GMKtec NucBox G2 pair produces valid STL" {
+    render_stl "gmktec_nucbox_g2_pair" \
+        -D 'component_count=2' -D 'component_gap=6' \
+        -D 'component_width=87.1' -D 'component_depth=87.5' -D 'component_height=40.3' \
+        -D 'rack_height=1' -D 'front_plate_hole=true' -D 'front_lip=true' \
+        -D 'front_wire_holes=false' -D 'keystones=false'
+    [ -s "$RENDERS/gmktec_nucbox_g2_pair.stl" ]
+}
+
 # ── Regression tests ──────────────────────────────────────────────────────────
 
 @test "missing_air_holes" {
